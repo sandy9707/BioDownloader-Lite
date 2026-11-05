@@ -74,7 +74,8 @@ export async function downloadUrl({ url, output, engine = 'aria2', connections =
     for await (const chunk of createReadStream(file)) digest.update(chunk);
     if (digest.digest('hex') !== md5.toLowerCase()) throw Object.assign(new Error('MD5 mismatch'), { staging });
   }
-  const handle = await open(file, 'r');
+  // FlushFileBuffers on Windows requires a writable file handle.
+  const handle = await open(file, 'r+');
   try { await handle.sync(); } finally { await handle.close(); }
   // Same-filesystem hard link atomically refuses an existing target. A filesystem
   // without hard-link support fails explicitly and preserves staging for recovery.
