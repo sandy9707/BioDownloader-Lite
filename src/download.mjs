@@ -4,6 +4,7 @@ import { createReadStream } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { request } from './direct-http.mjs';
+import { toolPath } from './tools.mjs';
 
 export function directEnvironment() {
   return { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !/proxy/i.test(key))), NO_PROXY: '*' };
@@ -60,7 +61,7 @@ export async function downloadUrl({ url, output, engine = 'aria2', connections =
       '--max-tries=1', '--connect-timeout=15', '--timeout=30', '--file-allocation=none',
       '--allow-overwrite=false', '--auto-file-renaming=false', '--http-accept-gzip=false',
       '--enable-color=false', '--summary-interval=1', `--dir=${staging}`, '--out=body', url];
-  const result = await runTool(engine === 'curl' ? 'curl' : 'aria2c', args, { timeoutMs, signal, onProgress });
+  const result = await runTool(toolPath(engine === 'curl' ? 'curl' : 'aria2c'), args, { timeoutMs, signal, onProgress });
   if (result.code !== 0 || result.killed) throw Object.assign(new Error(`Download incomplete (${result.code}): ${result.stderr.slice(-1000)}`), { staging, result });
   if (engine === 'aria2') {
     try { await stat(file + '.aria2'); throw new Error('Unfinished aria2 state remains'); }

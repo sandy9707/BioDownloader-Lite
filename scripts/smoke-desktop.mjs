@@ -1,0 +1,11 @@
+import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
+const child = spawn(require('electron'), ['.', '--smoke-test'], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+let output = '';
+child.stdout.on('data', data => { output += data; process.stdout.write(data); });
+child.stderr.on('data', data => process.stderr.write(data));
+const timer = setTimeout(() => { child.kill('SIGKILL'); process.exitCode = 1; }, 30000);
+child.on('error', error => { clearTimeout(timer); console.error(error); process.exitCode = 1; });
+child.on('close', code => { clearTimeout(timer); if (code !== 0 || !output.includes('LITE_DESKTOP_SMOKE_OK')) process.exitCode = 1; });

@@ -50,6 +50,14 @@ npm test
 
 ## 自动检查与源码包
 
-GitHub Actions 在 Linux、macOS 上运行离线测试，成功后上传源码压缩包到对应 Actions 运行的 Artifacts。可手动运行工作流。当前不生成 EXE/DMG，也不发布安装包。
+## 桌面安装包（预览）
+
+独立Electron桌面窗口已接入，使用原生文件夹选择器与本机随机端口。Windows NSIS支持选择安装目录、快捷方式，卸载保留用户数据；macOS输出DMG/ZIP，Linux输出AppImage/DEB。应用标识与Pro分离，不嵌入Mihomo，不接入Pro更新/计费服务。活动任务退出前提示，退出取消本轮子进程；未实现重启续传，不承诺断点恢复。
+
+开发启动 `npm ci && npm start`；打包 `npm run dist`。通过GitHub Actions的 **Build Lite installers** 手动构建，产物在Artifacts。当前未签名/公证，是早期预览包；构建与桌面渲染冒烟不等于所有平台已人工安装验收。安装包包含Electron运行时，用户不用额外安装Node；aria2/QTrans尚未随包分发，默认回退系统curl（Windows10/11、macOS通常自带），设置会显示工具可用状态。
+
+吸收2.x的独立提交构建、不可覆盖目标、完整文件验收、原生目录选择、退出清理与卸载保留原则；代理/账号业务不迁入。发布包不复用Pro Tag/清单，版本包不能覆盖已发行资产。
+
+源码工作流在 Linux、macOS 上运行离线测试，成功后上传源码压缩包到对应 Actions 运行的 Artifacts。安装包由独立工作流生成，尚未自动创建公开Release。
 
 源码包保留仓库文件布局，解压后执行 `npm run gui`。开发源码公开可读；本项目尚未指定开源许可证，不能据此推定具有第三方再分发授权。aria2、curl、QTrans 等第三方工具不随源码包分发。

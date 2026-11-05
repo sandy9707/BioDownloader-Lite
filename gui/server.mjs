@@ -1,17 +1,18 @@
 import http from 'node:http';
 import { readFile, stat, mkdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { join, resolve, basename } from 'node:path';
+import { join, resolve, basename, isAbsolute } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { resolveRun, isRun, isProject } from '../src/resolver.mjs';
 import { enumerateAccession, isSample, enaFiles } from '../src/metadata.mjs';
 import { downloadUrl, runTool } from '../src/download.mjs';
+import { toolPath } from '../src/tools.mjs';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
-export function createGuiServer({ download = downloadUrl } = {}) {
+export function createGuiServer({ download = downloadUrl, chooseDirectory = null, defaultDirectory = null } = {}) {
   const token = randomBytes(24).toString('hex'), tasks = [], logs = [], candidates = new Map();
-  const directory = join(homedir(), 'Downloads', 'BioDownloader-Lite');
+  const directory = defaultDirectory || join(homedir(), 'Downloads', 'BioDownloader-Lite');
   let resolving = false, closing = false;
   const log = message => { logs.push({ time: new Date().toISOString(), message }); if (logs.length > 300) logs.shift(); };
   const safeError = error => String(error.message).replace(/(?:https?|ftp):\/\/[^\s]+/g, '[文件地址]').slice(0, 1200);
@@ -92,12 +93,16 @@ export function createGuiServer({ download = downloadUrl } = {}) {
         if (req.method === 'GET' && path === '/api/state') return json(200, { tasks: tasks.map(publicTask), logs });
         if (req.method === 'GET' && path === '/api/config') {
           const tools = {};
-          for (const cmd of ['aria2c', 'curl']) { try { const r = await runTool(cmd, ['--version'], { timeoutMs: 4000 }); tools[cmd] = r.code === 0; } catch { tools[cmd] = false; } }
-          return json(200, { directory, tools });
+          for (const cmd of ['aria2c', 'curl']) { try { const r = await runTool(toolPath(cmd), ['--version'], { timeoutMs: 4000 }); tools[cmd] = r.code === 0; } catch { tools[cmd] = false; } }
+          return json(200, { directory, tools, nativeDirectoryPicker: Boolean(chooseDirectory) });
         }
         if (req.method !== 'POST') return json(405, { error: 'Method not allowed' });
         let raw = ''; for await (const chunk of req) { raw += chunk; if (raw.length > 65536) throw new Error('Request too large'); }
         const body = JSON.parse(raw || '{}');
+        if (path === '/api/directory') {
+          if (!chooseDirectory) throw new Error('浏览器模式请手动输入目录。');
+          return json(200, { directory: await chooseDirectory() });
+        }
         if (path === '/api/resolve') {
           if (resolving) return json(409, { error: '已有查询进行中。' });
           if (!['sra', 'ena', 'links'].includes(body.source) || typeof body.text !== 'string') throw new Error('Invalid query');
@@ -108,7 +113,7 @@ export function createGuiServer({ download = downloadUrl } = {}) {
         if (path === '/api/start') {
           if (!Array.isArray(body.ids) || !body.ids.length || body.ids.length > 200 || !['aria2', 'curl'].includes(body.engine) || ![1, 4].includes(body.connections)) throw new Error('Invalid task options');
           const target = resolve(body.directory || '');
-          if (!body.directory || !body.directory.startsWith('/')) throw new Error('请填写目标文件夹的绝对路径。');
+          if (!body.directory || !isAbsolute(body.directory)) throw new Error('请填写目标文件夹的绝对路径。');
           if (target === directory) await mkdir(target, { recursive: true });
           if (!(await stat(target)).isDirectory()) throw new Error('目标不是文件夹。');
           const files = [...new Set(body.ids)].map(id => { const file = candidates.get(id); if (!file) throw new Error('队列已失效，请重新查询。'); return file; });

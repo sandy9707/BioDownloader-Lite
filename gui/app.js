@@ -44,7 +44,11 @@ $('resolveForm').onsubmit = async event => {
   catch (error) { notice(error.message, true); }
   finally { $('resolveButton').disabled = false; $('resolveButton').textContent = '查询文件与大小'; }
 };
-$('defaultDir').onclick = () => { if (config) $('directory').value = config.directory; };
+$('defaultDir').onclick = async () => {
+  try { if (config?.nativeDirectoryPicker) { const result = await api('directory', {}); if (result.directory) $('directory').value = result.directory; }
+    else if (config) $('directory').value = config.directory;
+  } catch (error) { notice(error.message, true); }
+};
 $('startButton').onclick = async () => {
   $('startButton').disabled = true;
   try { await api('start', { ids: files.map(f => f.id), directory: $('directory').value, engine: $('engine').value, connections: Number($('connections').value) }); notice('任务已加入传输列表。'); view('transfers'); await refresh(); }
@@ -72,6 +76,6 @@ async function refresh() {
   try { const state = await api('state'); tasks = state.tasks; logs = state.logs; renderTasks(); $('logText').textContent = logs.map(l => `${new Date(l.time).toLocaleTimeString()}  ${l.message}`).join('\n') || '尚无日志。'; $('connectionStatus').textContent = '本机服务已连接 · 无应用代理'; }
   catch { $('connectionStatus').textContent = '本机服务未连接，请检查启动终端'; }
 }
-try { config = await api('config'); $('directory').value = config.directory; $('tools').textContent = `本机工具：aria2 ${config.tools.aria2c ? '可用' : '未安装'} · curl ${config.tools.curl ? '可用' : '未安装'}`; if (!config.tools.aria2c) $('engine').value = 'curl'; }
+try { config = await api('config'); $('directory').value = config.directory; if (config.nativeDirectoryPicker) $('defaultDir').textContent = '选择文件夹'; $('tools').textContent = `本机工具：aria2 ${config.tools.aria2c ? '可用' : '未安装'} · curl ${config.tools.curl ? '可用' : '未安装'}`; if (!config.tools.aria2c) $('engine').value = 'curl'; }
 catch (error) { notice(error.message, true); }
 await refresh(); setInterval(refresh, 1200);

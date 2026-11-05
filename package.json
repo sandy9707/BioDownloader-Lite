@@ -5,6 +5,21 @@
   "description": "Direct-first bioinformatics data downloader with a local graphical interface",
   "repository": "github:sandy9707/BioDownloader-Lite",
   "type": "module",
-  "scripts": { "test": "node --test test/*.test.mjs", "gui": "node gui/server.mjs" },
-  "engines": { "node": ">=22" }
+  "main": "desktop/main.cjs",
+  "scripts": { "test": "node --test test/*.test.mjs", "gui": "node gui/server.mjs", "start": "electron .", "pack": "electron-builder --dir", "dist": "electron-builder", "test:package": "node scripts/check-package.mjs" },
+  "engines": { "node": ">=22" },
+  "devDependencies": { "electron": "^39.0.0", "electron-builder": "^26.0.0" },
+  "build": {
+    "appId": "org.biodownloader.lite",
+    "productName": "BioDownloader Lite",
+    "asar": true,
+    "directories": { "output": "dist" },
+    "files": ["desktop/**", "gui/**", "src/**", "package.json"],
+    "publish": null,
+    "artifactName": "BioDownloader-Lite-${version}-${os}-${arch}.${ext}",
+    "mac": { "target": ["dmg", "zip"], "category": "public.app-category.utilities" },
+    "win": { "target": ["nsis"], "signAndEditExecutable": false },
+    "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true, "deleteAppDataOnUninstall": false },
+    "linux": { "target": ["AppImage", "deb"], "category": "Utility", "maintainer": "sandy9707" }
+  }
 }
