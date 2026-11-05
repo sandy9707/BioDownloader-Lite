@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
+  <title>BioDownloader Lite</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M10 4c0 10 12 14 12 24M22 4c0 10-12 14-12 24M11 8h10M12 15h8M11 23h10"/></svg><div>BioDownloader<span>Lite · 0.1</span></div></div>
+    <nav aria-label="主导航">
+      <button class="nav active" data-view="hub">下载中心</button>
+      <button class="nav" data-view="transfers">传输列表 <span id="taskCount">0</span></button>
+      <button class="nav" data-view="logs">运行日志</button>
+      <button class="nav" data-view="settings">设置</button>
+    </nav>
+    <div class="sidebar-bottom"><div class="network"><span class="dot"></span>本机直连</div><p>中国镜像优先<br>不使用应用代理</p><small>网络速度取决于源站和本地线路。</small></div>
+  </aside>
+  <main>
+    <header><div><h1 id="pageTitle">下载中心</h1><p id="pageSubtitle">查询来源，确认文件，再开始下载。</p></div><span class="edition">LITE</span></header>
+    <div id="notice" role="status" aria-live="polite" hidden></div>
+    <section id="hub" class="view">
+      <div class="source-tabs" role="group" aria-label="数据来源">
+        <button class="source active" data-source="sra">SRA 原始数据</button><button class="source" data-source="ena">EBI / ENA FASTQ</button><button class="source" data-source="links">直链 / FTP / DDBJ</button>
+      </div>
+      <form id="resolveForm" class="panel">
+        <div class="field-heading"><label id="inputLabel" for="accessions">SRA、BioProject 或 BioSample 编号</label><span id="sourceHint">CNCB → NCBI → ENA</span></div>
+        <textarea id="accessions" rows="4" placeholder="例如 SRR20710520、PRJNA727404 或 SAMN30029129&#10;多个编号用空格或换行分隔" required spellcheck="false"></textarea>
+        <p class="help" id="inputHelp">先展开项目 / 样本对应的 Run，再检查国内镜像。每次最多 20 个输入、100 个 Run。</p>
+        <div class="field-heading"><label for="directory">下载目标位置</label></div>
+        <div class="directory-row"><input id="directory" placeholder="输入本机已有文件夹的绝对路径" required><button type="button" id="defaultDir">默认目录</button></div>
+        <div class="form-actions"><button class="primary" id="resolveButton" type="submit">查询文件与大小</button><button id="startButton" class="success" type="button" disabled>开始下载</button><span class="help">直链大小未知时也可下载</span></div>
+      </form>
+      <section class="panel queue-panel"><div class="section-heading"><h2>文件队列</h2><span id="queueSummary">尚未添加文件</span></div><div id="queue" class="queue"><div class="empty"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 14h13l4 5h17v21H7zM7 14V9h13l4 5h17v5"/></svg><h3>准备好你的下一份数据</h3><p>输入编号或文件链接，查询后会在这里显示来源与大小。</p></div></div></section>
+    </section>
+    <section id="transfers" class="view" hidden><div class="section-heading"><div class="filters" role="group" aria-label="任务筛选"><button class="filter active" data-filter="all">全部</button><button class="filter" data-filter="active">正在下载</button><button class="filter" data-filter="completed">已完成</button><button class="filter" data-filter="failed">失败 / 取消</button></div><button id="clearFinished">清除已结束记录</button></div><div id="tasks" class="panel task-list"></div></section>
+    <section id="logs" class="view" hidden><div class="section-heading"><h2>运行日志</h2><button id="copyLogs">复制日志</button></div><pre id="logText" class="panel logs" tabindex="0">尚无日志。</pre><p class="help">仅显示任务状态与错误摘要，不记录签名链接或认证信息。</p></section>
+    <section id="settings" class="view" hidden><div class="panel settings"><h2>下载设置</h2><label for="engine">HTTP / FTP 下载器</label><select id="engine"><option value="aria2">aria2（推荐）</option><option value="curl">curl（单连接）</option></select><label for="connections">普通来源连接数</label><select id="connections"><option value="4">4 个连接</option><option value="1">1 个连接</option></select><p class="help">CNCB HTTP 文件固定单连接。任务逐个运行，不同时抢占带宽。</p><h2>来源能力</h2><dl><dt>CNCB / AWS</dt><dd>支持 Run 解析与文件下载</dd><dt>BioProject / BioSample</dt><dd>CNCB 优先，NCBI、ENA 依次回退</dd><dt>ENA</dt><dd>官方 FASTQ 清单；HTTPS 失败不会悄悄换 HTTP</dd><dt>DDBJ</dt><dd>支持官方文件直链，编号自动解析待接入</dd><dt>QTrans</dt><dd>校园容器验证通过，本机 GUI 适配待完成</dd><dt>暂停 / 断点恢复</dt><dd>待验证；当前取消后保留暂存文件，重试重新下载</dd></dl><p id="tools" class="help">正在检查下载工具…</p></div></section>
+    <footer><span>BioDownloader Lite</span><span id="connectionStatus">正在连接本机服务…</span></footer>
+  </main><script src="app.js" type="module"></script>
+</body></html>

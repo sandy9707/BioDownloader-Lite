@@ -1,0 +1,16 @@
+node_modules/
+.local/
+.env
+.env.*
+!.env.example
+dist/
+downloads/
+*.log
+*.part
+*.aria2
+*.sra
+*.fastq
+*.fastq.gz
+*.fastq.bz2
+.DS_Store
+.biodl-lite-*/

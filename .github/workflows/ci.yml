@@ -1,0 +1,36 @@
+name: Test and package source
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm test
+  source:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create source archive
+        run: |
+          mkdir -p dist
+          git archive --format=tar.gz --prefix=BioDownloader-Lite/ HEAD > dist/BioDownloader-Lite-source.tar.gz
+          sha256sum dist/BioDownloader-Lite-source.tar.gz > dist/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BioDownloader-Lite-source
+          path: dist/
+          retention-days: 30

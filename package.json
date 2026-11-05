@@ -1,0 +1,10 @@
+{
+  "name": "biodownloader-lite",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Direct-first bioinformatics data downloader with a local graphical interface",
+  "repository": "github:sandy9707/BioDownloader-Lite",
+  "type": "module",
+  "scripts": { "test": "node --test test/*.test.mjs", "gui": "node gui/server.mjs" },
+  "engines": { "node": ">=22" }
+}
