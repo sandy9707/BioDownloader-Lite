@@ -33,7 +33,7 @@ def main():
     expected = {'win32-x64.exe', 'mac-arm64.dmg', 'mac-arm64.zip', 'mac-x64.dmg', 'mac-x64.zip', 'linux-x64.AppImage', 'linux-x64.deb'}
     actual = {f.name.removeprefix(f'BioDownloader-Lite-{args.tag[1:]}-') for f in files}
     # electron-builder uses "win" or "win32" depending on platform macro.
-    actual = {'win32-x64.exe' if n == 'win-x64.exe' else n for n in actual}
+    actual = {n.replace('win-x64.exe','win32-x64.exe').replace('linux-x86_64.','linux-x64.').replace('linux-amd64.','linux-x64.') for n in actual}
     if actual != expected or any(f.stat().st_size < 1_000_000 for f in files):
         raise RuntimeError(f'Incomplete or unexpected installer set: {actual}')
     manifest = dest/'release-manifest.json'

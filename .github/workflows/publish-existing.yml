@@ -1,0 +1,48 @@
+name: Publish verified installer build
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Existing installer build run ID (all four build jobs must pass)
+        required: true
+permissions:
+  contents: write
+  actions: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify frozen build jobs and version
+        id: verified
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RUN: ${{ inputs.run_id }}
+        run: |
+          node --input-type=module <<'JS'
+          import {execFileSync} from 'node:child_process';
+          import {readFileSync,appendFileSync} from 'node:fs';
+          if(!/^\d+$/.test(process.env.BUILD_RUN)) throw Error('Invalid run');
+          const gh=(args)=>execFileSync('gh',args,{encoding:'utf8'});
+          const r=JSON.parse(gh(['run','view',process.env.BUILD_RUN,'--json','headSha,jobs,workflowName']));
+          const builds=r.jobs.filter(j=>j.name.startsWith('build ('));
+          if(r.workflowName!=='Build Lite installers'||builds.length!==4||builds.some(j=>j.conclusion!=='success')) throw Error('Incomplete build');
+          const p=JSON.parse(gh(['api',`repos/${process.env.GITHUB_REPOSITORY}/contents/package.json?ref=${r.headSha}`,'-H','Accept: application/vnd.github.raw+json']));
+          if(p.version!==JSON.parse(readFileSync('package.json')).version) throw Error('Version mismatch');
+          appendFileSync(process.env.GITHUB_OUTPUT,`commit=${r.headSha}\n`);
+          JS
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+          pattern: BioDownloader-Lite-*
+          merge-multiple: true
+          path: release-assets
+      - run: node scripts/ci-release.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_COMMIT: ${{ steps.verified.outputs.commit }}
+          BUILD_RUN_ID: ${{ inputs.run_id }}

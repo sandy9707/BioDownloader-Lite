@@ -56,7 +56,7 @@ def main():
                 print(command('BaiduPCS-Go','upload','-p','1','-l','1','--retry','1','--policy','skip',folder/row['name'],remote,timeout=1800),flush=True)
             for row in files:
                 meta = command('BaiduPCS-Go','meta',remote+'/'+row['name'],timeout=60)
-                sizes = re.findall(r'(?:文件大小|大小)\s*[:：]?\s*([\d,]+)\s*(?:B|字节|$)',meta,re.M)
+                sizes = re.findall(r'(?:文件大小|大小)\s*[:：]?\s*(\d+)(?:,|\s|$)',meta,re.M)
                 if not sizes or int(sizes[0].replace(',','')) != row['bytes']:
                     raise RuntimeError(f'Cannot verify exact remote bytes: {row["name"]}\n{meta}')
             done.write_text(json.dumps(dict(tag=tag,remote=remote,files=files),indent=2)+'\n')
