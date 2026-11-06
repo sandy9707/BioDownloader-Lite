@@ -1,5 +1,9 @@
 # BioDownloader Lite
 
+**[安装包下载 / GitHub Releases](https://github.com/sandy9707/BioDownloader-Lite/releases)** · [发布与网盘自动镜像约定](docs/RELEASING.md)
+
+**[百度网盘完整包镜像](https://pan.baidu.com/s/1xqOGSrh_ws6EEF-85TNgqw?pwd=2fed)**（提取码 `2fed`，按版本分目录；v0.1.0七份安装包已逐文件核验字节数）。
+
 国内直连优先的生信原始数据下载器，当前版本 **0.1.0 原型**。提供浅色本机 Web GUI、编号查询和文件下载，不包含 Mihomo 或应用代理模块。
 
 ## 启动
@@ -58,6 +62,6 @@ npm test
 
 吸收2.x的独立提交构建、不可覆盖目标、完整文件验收、原生目录选择、退出清理与卸载保留原则；代理/账号业务不迁入。发布包不复用Pro Tag/清单，版本包不能覆盖已发行资产。
 
-源码工作流在 Linux、macOS 上运行离线测试，成功后上传源码压缩包到对应 Actions 运行的 Artifacts。安装包由独立工作流生成，尚未自动创建公开Release。
+源码工作流在 Linux、macOS 上运行离线测试，成功后上传源码压缩包到对应 Actions 运行的 Artifacts。安装包由独立工作流生成；推送版本Tag或手动勾选publish时，四平台全部通过后自动创建预发布Release（七份安装包、manifest、SHA256SUMS）。已发资产不覆盖。完整包Release由本机定时镜像至百度网盘独立版本目录，只有网盘侧精确字节核验通过才算完成；机器离线会延迟同步。
 
 源码包保留仓库文件布局，解压后执行 `npm run gui`。开发源码公开可读；本项目尚未指定开源许可证，不能据此推定具有第三方再分发授权。aria2、curl、QTrans 等第三方工具不随源码包分发。
